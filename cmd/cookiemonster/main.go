@@ -3,6 +3,7 @@ package main
 import (
 	_ "embed"
 	"flag"
+	"fmt"
 	"os"
 	"runtime"
 )
@@ -19,11 +20,28 @@ var (
 	concurrencyFlag = flag.Int("concurrency", runtime.NumCPU(), "Optional. How many attempts should run concurrently; the default is 100.")
 	verboseFlag     = flag.Bool("verbose", false, "Optional. Enables additional output on how the cookie is decoded.")
 	resignFlag      = flag.String("resign", "", "Optional. Unencoded data to resign the cookie with; presently only supported by Django.")
+	outputFlag      = flag.String("output", "", "Optional. The file to write the output to.")
 )
 
 func main() {
-	sayHello()
+
 	flag.Parse()
+
+	var err error
+	if *outputFlag != "" {
+		outputFile, err = os.Create(*outputFlag)
+		if err != nil {
+			fmt.Println("Error creating output file:", err)
+			os.Exit(1)
+		}
+		fmt.Println("Output file created:", *outputFlag) // Debugging log
+		defer outputFile.Close()
+	} else {
+		outputFile = os.Stdout
+		fmt.Println("No output file specified, defaulting to stdout") // Debugging log
+	}
+
+	sayHello()
 
 	// We need both of these.
 	if (*cookieFlag == "" && *urlFlag == "") || (*cookieFlag != "" && *urlFlag != "") || *wordlistFlag == "" {
